@@ -37,6 +37,8 @@ class LRUReplacer : public Replacer {
 
 private:
   // add your own private member variables here
+  size_t num_pages_;
+  list<frame_id_t> lru_list_;
 };
 
 #endif  // MINISQL_LRU_REPLACER_H
