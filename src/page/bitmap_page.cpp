@@ -12,7 +12,8 @@ bool BitmapPage<PageSize>::AllocatePage(uint32_t &page_offset) {
     bytes[next_free_page_/8] |= (1<<(7-(next_free_page_%8)));
     page_allocated_++;
     page_offset = next_free_page_;
-    for(uint32_t i = (next_free_page_+1);i < 8 * MAX_CHARS;i++){
+    next_free_page_ = 8 * MAX_CHARS;
+    for(uint32_t i = (page_offset+1);i < 8 * MAX_CHARS;i++){
         if((bytes[i/8]&(1<<(7-(i%8)))) == 0){
             next_free_page_ = i;
             break;
@@ -30,9 +31,8 @@ bool BitmapPage<PageSize>::DeAllocatePage(uint32_t page_offset) {
     }
     bytes[page_offset/8] &= ~(1<<(7-(page_offset%8)));
     page_allocated_--;
-    if(next_free_page_ > page_offset){
+    if(next_free_page_ > page_offset)
         next_free_page_ = page_offset;
-    }
     return true;
 }
 
