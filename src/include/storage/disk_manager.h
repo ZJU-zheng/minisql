@@ -25,6 +25,7 @@ class DiskManager {
   explicit DiskManager(const std::string &db_file);
 
   ~DiskManager() {
+      WritePhysicalPage(META_PAGE_ID,meta_data_);
     if (!closed) {
       Close();
     }

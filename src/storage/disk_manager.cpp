@@ -55,10 +55,10 @@ page_id_t DiskManager::AllocatePage() {
     DiskFileMetaPage *meta_page = reinterpret_cast<DiskFileMetaPage *>(meta_data_);
     if(meta_page->GetAllocatedPages() >= MAX_VALID_PAGE_ID){
         //LOG(WARNING) << "this disk is full" << std::endl;
-        return -1;
+        return INVALID_PAGE_ID;
     }
     for(i = 0;i < meta_page->GetExtentNums();i++){
-        if(meta_page->GetExtentUsedPage(i) != BitmapPage<PAGE_SIZE>::GetMaxSupportedSize()){
+        if(meta_page->GetExtentUsedPage(i) < BitmapPage<PAGE_SIZE>::GetMaxSupportedSize()){
             meta_page->num_allocated_pages_++;
             meta_page->extent_used_page_[i]++;
             if(meta_page->extent_used_page_[i] == 1)

@@ -10,7 +10,6 @@ LRUReplacer::~LRUReplacer() = default;
 bool LRUReplacer::Victim(frame_id_t *frame_id) {
     if(Size() == 0)
         return false;
-    num_pages_--;
     (*frame_id) = lru_list_.front();
     lru_list_.pop_front();
     return true;
@@ -21,7 +20,6 @@ void LRUReplacer::Pin(frame_id_t frame_id) {
     list<frame_id_t>::iterator ite;
     for(ite = lru_list_.begin();ite != lru_list_.end();ite++){
         if((*ite) == frame_id){
-            num_pages_--;
             lru_list_.remove(frame_id);
             break;
         }
@@ -39,10 +37,8 @@ void LRUReplacer::Unpin(frame_id_t frame_id) {
                 break;
             }
         }
-        if(flag == 0){
-            num_pages_++;
+        if(flag == 0)
             lru_list_.push_back(frame_id);
-        }
     }
 }
 

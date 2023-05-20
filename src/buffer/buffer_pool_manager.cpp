@@ -84,7 +84,7 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
         flag = 0;
     }
     Page * page = &pages_[frame_id_new];
-    if(page->is_dirty_){
+    if((page->is_dirty_) && (flag == 0)){
         disk_manager_->WritePage(page->page_id_,page->data_);
         page->is_dirty_ = false;
     }
@@ -106,9 +106,8 @@ bool BufferPoolManager::DeletePage(page_id_t page_id) {
   // 1.   If P does not exist, return true.
   // 2.   If P exists, but has a non-zero pin-count, return false. Someone is using the page.
   // 3.   Otherwise, P can be deleted. Remove P from the page table, reset its metadata and return it to the free list.
-    if(page_id == INVALID_PAGE_ID){
+    if(page_id == INVALID_PAGE_ID)
         return true;
-    }
     if(page_table_.find(page_id) == page_table_.end())
         return true;
     auto ite = page_table_.find(page_id);
@@ -116,10 +115,8 @@ bool BufferPoolManager::DeletePage(page_id_t page_id) {
         LOG(WARNING) << "Someone is using the page" << std::endl;
         return false;
     }
-    if(pages_[ite->second].is_dirty_){
-        if(FlushPage(page_id))
-            pages_[ite->second].is_dirty_ = false;
-    }
+    if(pages_[ite->second].is_dirty_)
+        pages_[ite->second].is_dirty_ = false;
     DeallocatePage(page_id);
     pages_[ite->second].page_id_ = INVALID_PAGE_ID;
     pages_[ite->second].ResetMemory();
@@ -143,15 +140,15 @@ bool BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty) {
     pages_[ite->second].pin_count_--;
     if(pages_[ite->second].pin_count_==0)
         replacer_->Unpin(ite->second);
-    pages_[ite->second].is_dirty_ = is_dirty;
+    if(is_dirty)
+        pages_[ite->second].is_dirty_ = is_dirty;
     return true;
 }
 
 
 bool BufferPoolManager::FlushPage(page_id_t page_id) {
-    if(page_id == INVALID_PAGE_ID){
+    if(page_id == INVALID_PAGE_ID)
         return false;
-    }
     if(page_table_.find(page_id) == page_table_.end())
         return false;
     auto ite = page_table_.find(page_id);
