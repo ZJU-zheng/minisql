@@ -153,3 +153,38 @@ TEST(TupleTest, ColumnTest) {
     delete df;
     df = nullptr;
 }
+TEST(TupleTest, SchemaTest) {
+    // create schema
+    std::vector<Column *> columns = {new Column("id", TypeId::kTypeInt, 0, false, false),
+                                     new Column("name", TypeId::kTypeChar, 64, 1, true, false),
+                                     new Column("account", TypeId::kTypeFloat, 2, true, false)};
+    auto schema = new Schema(columns,true);
+    char buffer[PAGE_SIZE];
+    memset(buffer, 0, sizeof(buffer));
+    // Serialize phase
+    char *p = buffer;
+    p += schema->SerializeTo(p);
+    uint32_t ofs = 0;
+    Schema *df= nullptr;
+    ofs += Schema::DeserializeFrom(buffer, df);
+    ASSERT_EQ(3,df->GetColumnCount());
+    ASSERT_EQ("id",df->GetColumn(0)->GetName());
+    ASSERT_EQ(TypeId::kTypeInt,df->GetColumn(0)->GetType());
+    ASSERT_EQ(0,df->GetColumn(0)->GetTableInd());
+    ASSERT_EQ(false,df->GetColumn(0)->IsNullable());
+    ASSERT_EQ(false,df->GetColumn(0)->IsUnique());
+    ASSERT_EQ("name",df->GetColumn(1)->GetName());
+    ASSERT_EQ(TypeId::kTypeChar,df->GetColumn(1)->GetType());
+    ASSERT_EQ(64,df->GetColumn(1)->GetLength());
+    ASSERT_EQ(1,df->GetColumn(1)->GetTableInd());
+    ASSERT_EQ(true,df->GetColumn(1)->IsNullable());
+    ASSERT_EQ(false,df->GetColumn(1)->IsUnique());
+    ASSERT_EQ("account",df->GetColumn(2)->GetName());
+    ASSERT_EQ(TypeId::kTypeFloat,df->GetColumn(2)->GetType());
+    ASSERT_EQ(2,df->GetColumn(2)->GetTableInd());
+    ASSERT_EQ(true,df->GetColumn(2)->IsNullable());
+    ASSERT_EQ(false,df->GetColumn(2)->IsUnique());
+    ASSERT_EQ(ofs,df->GetSerializedSize());
+    delete df;
+    df = nullptr;
+}

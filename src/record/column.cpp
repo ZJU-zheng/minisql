@@ -66,7 +66,7 @@ uint32_t Column::GetSerializedSize() const {
 
 
 uint32_t Column::DeserializeFrom(char *buf, Column *&column) {
-    uint32_t COLUMN_MAGIC_NUM_Read;
+    uint32_t COLUMN_MAGIC_NUM_Read = 0;
     TypeId type;
     uint32_t len;
     uint32_t table_ind;
