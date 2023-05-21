@@ -101,3 +101,55 @@ TEST(TupleTest, RowTest) {
   ASSERT_TRUE(table_page.MarkDelete(row.GetRowId(), nullptr, nullptr, nullptr));
   table_page.ApplyDelete(row.GetRowId(), nullptr, nullptr);
 }
+Column column_test[]{
+        Column("a1_ test", TypeId::kTypeInt, 3, true, true),
+        Column("a2", TypeId::kTypeChar, 1, 0, true, true),
+        Column("a3", TypeId::kTypeFloat, 4, false, false),
+        Column("a4", TypeId::kTypeChar, 255, 99, false, false),
+};
+TEST(TupleTest, ColumnTest) {
+    char buffer[PAGE_SIZE];
+    memset(buffer, 0, sizeof(buffer));
+    // Serialize phase
+    char *p = buffer;
+    for (int i = 0; i < 4; i++)
+        p += column_test[i].SerializeTo(p);
+    // Deserialize phase
+    uint32_t ofs = 0;
+    Column *df = nullptr;
+    ofs += Column::DeserializeFrom(buffer + ofs, df);
+    ASSERT_EQ("a1_ test", df->GetName());
+    ASSERT_EQ(TypeId::kTypeInt, df->GetType());
+    ASSERT_EQ(3, df->GetTableInd());
+    ASSERT_EQ(true, df->IsNullable());
+    ASSERT_EQ(true, df->IsUnique());
+    ASSERT_EQ(ofs,df->GetSerializedSize());
+    delete df;
+    df = nullptr;
+    ofs += Column::DeserializeFrom(buffer + ofs,df);
+    ASSERT_EQ("a2", df->GetName());
+    ASSERT_EQ(TypeId::kTypeChar, df->GetType());
+    ASSERT_EQ(1, df->GetLength());
+    ASSERT_EQ(0, df->GetTableInd());
+    ASSERT_EQ(true, df->IsNullable());
+    ASSERT_EQ(true, df->IsUnique());
+    delete df;
+    df = nullptr;
+    ofs += Column::DeserializeFrom(buffer + ofs, df);
+    ASSERT_EQ("a3", df->GetName());
+    ASSERT_EQ(TypeId::kTypeFloat, df->GetType());
+    ASSERT_EQ(4, df->GetTableInd());
+    ASSERT_EQ(false, df->IsNullable());
+    ASSERT_EQ(false, df->IsUnique());
+    delete df;
+    df = nullptr;
+    ofs += Column::DeserializeFrom(buffer + ofs,df);
+    ASSERT_EQ("a4", df->GetName());
+    ASSERT_EQ(TypeId::kTypeChar, df->GetType());
+    ASSERT_EQ(255, df->GetLength());
+    ASSERT_EQ(99, df->GetTableInd());
+    ASSERT_EQ(false, df->IsNullable());
+    ASSERT_EQ(false, df->IsUnique());
+    delete df;
+    df = nullptr;
+}

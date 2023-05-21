@@ -43,7 +43,8 @@ uint32_t Column::SerializeTo(char *buf) const {
     uint32_t temp = name_.length();
     memcpy(buf+SerializedSize, &temp, sizeof(uint32_t));
     SerializedSize += sizeof(uint32_t);
-    memcpy(buf+SerializedSize,&name_,name_.length());
+    const char *name_char = name_.c_str();
+    memcpy(buf+SerializedSize,name_char,name_.length());
     SerializedSize += name_.length();
     memcpy(buf+SerializedSize,&type_,sizeof(type_));
     SerializedSize += sizeof(type_);
