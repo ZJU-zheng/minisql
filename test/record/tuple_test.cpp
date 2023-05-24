@@ -188,3 +188,61 @@ TEST(TupleTest, SchemaTest) {
     delete df;
     df = nullptr;
 }
+TEST(TupleTest, row_Test) {
+    // create schema
+    std::vector<Column *> columns = {new Column("id", TypeId::kTypeInt, 0, false, false),
+                                     new Column("name", TypeId::kTypeChar, 64, 1, true, false),
+                                     new Column("account", TypeId::kTypeFloat, 2, true, false)};
+    auto schema = new Schema(columns,true);
+    std::vector<Field> fields;
+    Field fields_[] = {
+            Field(TypeId::kTypeInt),
+            Field(TypeId::kTypeInt, 666),
+            Field(TypeId::kTypeChar),
+            Field(TypeId::kTypeChar, const_cast<char *>("minisql"), strlen("minisql"),false),
+            Field(TypeId::kTypeFloat, 999999.9995f),
+            Field(TypeId::kTypeFloat),
+    };
+    fields.push_back(fields_[0]);
+    fields.push_back(fields_[3]);
+    fields.push_back(fields_[5]);
+    auto row = new Row(fields);
+    char buffer[PAGE_SIZE];
+    memset(buffer, 0, sizeof(buffer));
+    // Serialize phase
+    char *p = buffer;
+    uint32_t ofs = 0;
+    ofs = row->SerializeTo(p,schema);
+    ASSERT_EQ(ofs,row->GetSerializedSize(schema));
+    ofs=0;
+    auto new_row = new Row();
+    ofs += new_row->DeserializeFrom(buffer, schema);
+    ASSERT_EQ(ofs,new_row->GetSerializedSize(schema));
+    ASSERT_EQ(3,new_row->GetFieldCount());
+    ASSERT_EQ(2,new_row->GetField(0)->CompareEquals(fields_[0]));
+    ASSERT_EQ(1,new_row->GetField(1)->CompareEquals(fields_[3]));
+    ASSERT_EQ(2,new_row->GetField(2)->CompareEquals(fields_[5]));
+    delete row;
+    delete new_row;
+    fields.clear();
+    fields.push_back(fields_[1]);
+    fields.push_back(fields_[2]);
+    fields.push_back(fields_[4]);
+    row = new Row(fields);
+    memset(buffer, 0, sizeof(buffer));
+    // Serialize phase
+    p = buffer;
+    ofs = 0;
+    ofs = row->SerializeTo(p,schema);
+    ASSERT_EQ(ofs,row->GetSerializedSize(schema));
+    ofs=0;
+    new_row = new Row();
+    ofs += new_row->DeserializeFrom(buffer, schema);
+    ASSERT_EQ(ofs,new_row->GetSerializedSize(schema));
+    ASSERT_EQ(3,new_row->GetFieldCount());
+    ASSERT_EQ(1,new_row->GetField(0)->CompareEquals(fields_[1]));
+    ASSERT_EQ(2,new_row->GetField(1)->CompareEquals(fields_[2]));
+    ASSERT_EQ(1,new_row->GetField(2)->CompareEquals(fields_[4]));
+    delete row;
+    delete new_row;
+}
