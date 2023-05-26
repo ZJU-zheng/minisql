@@ -6,7 +6,7 @@
 template <size_t PageSize>
 bool BitmapPage<PageSize>::AllocatePage(uint32_t &page_offset) {
     if(page_allocated_ == 8 * MAX_CHARS){
-        //LOG(WARNING) << "there is no page available" <<std::endl;
+        LOG(WARNING) << "there is no page available" <<std::endl;
         return false;
     }
     bytes[next_free_page_/8] |= (1<<(7-(next_free_page_%8)));

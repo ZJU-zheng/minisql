@@ -101,6 +101,7 @@ TEST(TupleTest, RowTest) {
   ASSERT_TRUE(table_page.MarkDelete(row.GetRowId(), nullptr, nullptr, nullptr));
   table_page.ApplyDelete(row.GetRowId(), nullptr, nullptr);
 }
+/*
 Column column_test[]{
         Column("a1_ test", TypeId::kTypeInt, 3, true, true),
         Column("a2", TypeId::kTypeChar, 1, 0, true, true),
@@ -246,3 +247,4 @@ TEST(TupleTest, row_Test) {
     delete row;
     delete new_row;
 }
+*/

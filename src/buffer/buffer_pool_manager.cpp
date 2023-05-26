@@ -116,7 +116,7 @@ bool BufferPoolManager::DeletePage(page_id_t page_id) {
         return false;
     }
     if(pages_[ite->second].is_dirty_)
-        pages_[ite->second].is_dirty_ = false;
+        FlushPage(pages_[ite->second].page_id_);
     DeallocatePage(page_id);
     pages_[ite->second].page_id_ = INVALID_PAGE_ID;
     pages_[ite->second].ResetMemory();
