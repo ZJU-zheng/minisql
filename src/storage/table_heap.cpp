@@ -17,9 +17,10 @@ bool TableHeap::InsertTuple(Row &row, Transaction *txn) {
     auto new_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->NewPage(new_page_id));
     new_page->Init(new_page_id, pre_page_id, log_manager_, txn);
     new_page->InsertTuple(row,schema_,txn,lock_manager_,log_manager_);
-    auto pre_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->NewPage(pre_page_id));
-    pre_page->SetNextPageId(new_page_id);
     buffer_pool_manager_->UnpinPage(new_page_id,true);
+    auto pre_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(pre_page_id));
+    pre_page->SetNextPageId(new_page_id);
+    buffer_pool_manager_->UnpinPage(pre_page_id,true);
     return true;
 }
 

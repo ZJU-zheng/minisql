@@ -101,9 +101,9 @@ class AbstractStatement {
                                       vector<uint32_t> *column_in_condition = nullptr, bool *has_or = nullptr) {
     switch (ast->type_) {
       case kNodeConnector: {
-        auto left = MakePredicate(ast->child_, table_name);
-        auto right = MakePredicate(ast->child_->next_, table_name);
-        if (has_or && !strcmp(ast->val_, "or")) {
+          auto left = MakePredicate(ast->child_, table_name, column_in_condition);
+          auto right = MakePredicate(ast->child_->next_, table_name, column_in_condition);
+          if (has_or && !strcmp(ast->val_, "or")) {
           *has_or = true;
         }
         return MakeLogicExpression(left, right, LogicExpression::Char2Type(ast->val_));
@@ -115,7 +115,9 @@ class AbstractStatement {
         auto const_expr = MakeConstantValueExpression(col_expr->GetReturnType(), value);
         if (column_in_condition) {
           uint32_t index = dynamic_pointer_cast<ColumnValueExpression>(col_expr)->GetColIdx();
-          column_in_condition->emplace_back(index);
+            //if(std::find(column_in_condition->begin(), column_in_condition->end(), index) ==column_in_condition->end()){
+                column_in_condition->emplace_back(index);
+            //}
         }
         return MakeComparisonExpression(col_expr, const_expr, ast->val_);
       }

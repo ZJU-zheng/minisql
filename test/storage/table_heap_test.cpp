@@ -14,7 +14,6 @@ using Fields = std::vector<Field>;
 
 TEST(TableHeapTest, TableHeapSampleTest) {
   // init testing instance
-    remove(db_file_name.c_str());
   auto disk_mgr_ = new DiskManager(db_file_name);
   auto bpm_ = new BufferPoolManager(DEFAULT_BUFFER_POOL_SIZE, disk_mgr_);
   const int row_nums = 10000;
@@ -60,5 +59,4 @@ TEST(TableHeapTest, TableHeapSampleTest) {
     delete row_kv.second;
   }
   ASSERT_EQ(size, 0);
-    remove(db_file_name.c_str());
 }

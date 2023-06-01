@@ -24,17 +24,18 @@ ExecuteEngine::ExecuteEngine() {
     mkdir("./databases", 0777);
     dir = opendir(path);
   }
-  /** After you finish the code for the CatalogManager section,
-   *  you can uncomment the commented code.
-  struct dirent *stdir;
-  while((stdir = readdir(dir)) != nullptr) {
-    if( strcmp( stdir->d_name , "." ) == 0 ||
-        strcmp( stdir->d_name , "..") == 0 ||
-        stdir->d_name[0] == '.')
-      continue;
-    dbs_[stdir->d_name] = new DBStorageEngine(stdir->d_name, false);
-  }
-   **/
+    /** When you have completed all the code for
+     *  the test, run it using main.cpp and uncomment
+     *  this part of the code.
+    struct dirent *stdir;
+    while((stdir = readdir(dir)) != nullptr) {
+      if( strcmp( stdir->d_name , "." ) == 0 ||
+          strcmp( stdir->d_name , "..") == 0 ||
+          stdir->d_name[0] == '.')
+        continue;
+      dbs_[stdir->d_name] = new DBStorageEngine(stdir->d_name, false);
+    }
+     **/
   closedir(dir);
 }
 
