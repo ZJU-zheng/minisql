@@ -64,7 +64,9 @@ void BPlusTreePage::SetMaxSize(int size) {
  * Helper method to get min page size
  * Generally, min page size == max page size / 2
  */
-
+/**
+ * TODO: Student Implement
+ */
 int BPlusTreePage::GetMinSize() const {
     return max_size_/2;
 }

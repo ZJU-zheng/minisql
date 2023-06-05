@@ -52,24 +52,25 @@ int LeafPage::KeyIndex(const GenericKey *key, const KeyManager &KM) {
     int left = 0;
     int right = GetSize()-1;
     int mid,comp_result;
+    int result = -1;
     while(left <= right){
         mid = (left+right)/2;
         comp_result = KM.CompareKeys(key,KeyAt(mid));
-        if(comp_result == 0){//since unique,just return is ok
+        if(comp_result == 0){
             return mid;
         }
         else if(comp_result < 0){
-            right = mid;
+            result = mid;
+            right = mid - 1;
         }
         else{
             left = mid + 1;
         }
-        if(right == left){
-            return left;
-        }
     }
-    LOG(WARNING)<<"unknown mistake in KeyIndex in leafpage"<<std::endl;
-    return INVALID_PAGE_ID;
+    if(result == -1){
+        return INVALID_PAGE_ID;
+    }
+    return result;
 }
 
 /*
@@ -121,6 +122,15 @@ int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) 
     int i;
     int size = GetSize();
     int old_value_index = KeyIndex(key,KM);
+    if(KeyAt(old_value_index) == key){
+        return -1;//represent already have this key
+    }
+    if(old_value_index == INVALID_PAGE_ID){
+        SetKeyAt(size, key);
+        SetValueAt(size, value);
+        SetSize(size + 1);
+        return GetSize();
+    }
     GenericKey *pre_key;
     RowId pre_rowid;
     for(i = (size-1);i >= old_value_index;i--){
@@ -143,7 +153,7 @@ int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) 
  */
 void LeafPage::MoveHalfTo(LeafPage *recipient) {
     int size = GetSize();
-    recipient->CopyNFrom(PairPtrAt(size/2+1),size/2);
+    recipient->CopyNFrom(PairPtrAt((size+1)/2),size/2);
     SetSize(size-size/2);
 }
 
@@ -165,6 +175,9 @@ void LeafPage::CopyNFrom(void *src, int size) {
  */
 bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM) {
     int index = KeyIndex(key,KM);
+    if(index == INVALID_PAGE_ID){
+        return false;
+    }
     int comp_result = KM.CompareKeys(key,KeyAt(index));
     if(comp_result == 0){
         value = ValueAt(index);
@@ -185,6 +198,10 @@ bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM)
 int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM) {
     int size = GetSize(),i;
     int index = KeyIndex(key,KM);
+    if(index == INVALID_PAGE_ID){
+        LOG(WARNING)<<"delete failed"<<std::endl;
+        return size;
+    }
     int comp_result = KM.CompareKeys(key,KeyAt(index));
     GenericKey *temp1;
     RowId temp2;
@@ -228,18 +245,36 @@ void LeafPage::MoveAllTo(LeafPage *recipient) {
  *
  */
 void LeafPage::MoveFirstToEndOf(LeafPage *recipient) {
+    int size = GetSize(),i;
+    GenericKey *key = KeyAt(0);
+    RowId value = ValueAt(0);
+    recipient->CopyLastFrom(key,value);
+    for(i=0;i<(size-1);i++){
+        key = KeyAt(i+1);
+        value = ValueAt(i+1);
+        SetKeyAt(i,key);
+        SetValueAt(i,value);
+    }
+    SetSize(size-1);
 }
 
 /*
  * Copy the item into the end of my item list. (Append item to my array)
  */
 void LeafPage::CopyLastFrom(GenericKey *key, const RowId value) {
+    int size = GetSize();
+    SetKeyAt(size,key);
+    SetValueAt(size,value);
+    SetSize(size+1);
 }
 
 /*
  * Remove the last key & value pair from this page to "recipient" page.
  */
 void LeafPage::MoveLastToFrontOf(LeafPage *recipient) {
+    int size = GetSize();
+    recipient->CopyFirstFrom(KeyAt(size-1), ValueAt(size-1));
+    SetSize(size-1);
 }
 
 /*
@@ -247,4 +282,16 @@ void LeafPage::MoveLastToFrontOf(LeafPage *recipient) {
  *
  */
 void LeafPage::CopyFirstFrom(GenericKey *key, const RowId value) {
+    int size = GetSize(),i;
+    GenericKey *temp1;
+    RowId temp2;
+    for(i=(size-1);i>=0;i--){
+        temp1 = KeyAt(i);
+        temp2 = ValueAt(i);
+        SetKeyAt(i+1,temp1);
+        SetValueAt(i+1,temp2);
+    }
+    SetKeyAt(0,key);
+    SetValueAt(0,value);
+    SetSize(size+1);
 }

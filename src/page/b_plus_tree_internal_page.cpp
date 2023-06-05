@@ -72,6 +72,7 @@ page_id_t InternalPage::Lookup(const GenericKey *key, const KeyManager &KM) {
     int left = 1;
     int right = GetSize()-1;
     int mid,comp_result;
+    int result = -1;
     while(left <= right){
         mid = (left+right)/2;
         comp_result = KM.CompareKeys(key,KeyAt(mid));
@@ -82,10 +83,14 @@ page_id_t InternalPage::Lookup(const GenericKey *key, const KeyManager &KM) {
             right = mid - 1;
         }
         else{
+            result = mid;
             left = mid + 1;
         }
     }
-    return INVALID_PAGE_ID;
+    if(result == -1){
+        return ValueAt(0);
+    }
+    return ValueAt(result);
 }
 
 /*****************************************************************************
@@ -137,7 +142,7 @@ int InternalPage::InsertNodeAfter(const page_id_t &old_value, GenericKey *new_ke
 void InternalPage::MoveHalfTo(InternalPage *recipient, BufferPoolManager *buffer_pool_manager) {
     int size = GetSize();
     int offset = size-size/2;
-    recipient->CopyNFrom(data_+offset ,size/2,buffer_pool_manager);
+    recipient->CopyNFrom(KeyAt((size+1)/2) ,size/2,buffer_pool_manager);
     SetSize(offset);
 }
 
@@ -148,7 +153,7 @@ void InternalPage::MoveHalfTo(InternalPage *recipient, BufferPoolManager *buffer
  */
 void InternalPage::CopyNFrom(void *src, int size, BufferPoolManager *buffer_pool_manager) {
     SetSize(size);
-    memcpy(data_,src,size*GetKeySize());
+    memcpy(data_,src,size*(GetKeySize()+sizeof(page_id_t)));
     int i;
     InternalPage *temp;
     for(i = 0;i < size;i++){
@@ -199,9 +204,19 @@ page_id_t InternalPage::RemoveAndReturnOnlyChild() {
  * You also need to use BufferPoolManager to persist changes to the parent page id for those
  * pages that are moved to the recipient
  */
+//when merging,I ask the back to move all to the front
 void InternalPage::MoveAllTo(InternalPage *recipient, GenericKey *middle_key, BufferPoolManager *buffer_pool_manager) {
     SetKeyAt(0,middle_key);
-    recipient->CopyNFrom(data_ ,GetSize(),buffer_pool_manager);
+    int size = GetSize();
+    int size_ = recipient->GetSize();
+    memcpy(recipient->KeyAt(size_),data_,size*(GetKeySize()+sizeof(page_id_t)));
+    int i;
+    InternalPage *temp;
+    for(i = 0;i < size;i++){
+        temp = reinterpret_cast<InternalPage *>(buffer_pool_manager->FetchPage(ValueAt(i)));
+        temp->SetParentPageId(recipient->GetPageId());
+        buffer_pool_manager->UnpinPage(ValueAt(i),true);
+    }
     SetSize(0);
 }
 
@@ -221,10 +236,6 @@ void InternalPage::MoveFirstToEndOf(InternalPage *recipient, GenericKey *middle_
     SetKeyAt(0,middle_key);
     recipient->CopyLastFrom(KeyAt(0), ValueAt(0),buffer_pool_manager);
     Remove(0);
-//    InternalPage *temp;
-//    temp = reinterpret_cast<InternalPage *>(buffer_pool_manager->FetchPage(GetParentPageId()));
-//    int index = temp->ValueIndex(GetPageId());
-//    temp->SetKeyAt(index, KeyAt(0));
 }
 
 /* Append an entry at the end.
@@ -262,4 +273,20 @@ void InternalPage::MoveLastToFrontOf(InternalPage *recipient, GenericKey *middle
  * So I need to 'adopt' it by changing its parent page id, which needs to be persisted with BufferPoolManger
  */
 void InternalPage::CopyFirstFrom(const page_id_t value, BufferPoolManager *buffer_pool_manager) {
+    int i;
+    int size = GetSize();
+    GenericKey *temp1;
+    page_id_t temp2;
+    for(i = (size-1);i >= 0;i--){
+        temp1 = KeyAt(i);
+        temp2 = ValueAt(i);
+        SetKeyAt(i+1,temp1);
+        SetValueAt(i+1,temp2);
+    }
+    SetValueAt(0,value);
+    SetSize(size+1);
+    InternalPage *temp;
+    temp = reinterpret_cast<InternalPage *>(buffer_pool_manager->FetchPage(value));
+    temp->SetParentPageId(GetPageId());
+    buffer_pool_manager->UnpinPage(value,true);
 }
