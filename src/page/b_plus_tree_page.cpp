@@ -1,5 +1,5 @@
 #include "page/b_plus_tree_page.h"
-
+#include <math.h>
 /*
  * Helper methods to get/set page type
  * Page type enum class is defined in b_plus_tree_page.h
@@ -64,11 +64,11 @@ void BPlusTreePage::SetMaxSize(int size) {
  * Helper method to get min page size
  * Generally, min page size == max page size / 2
  */
-/**
- * TODO: Student Implement
- */
 int BPlusTreePage::GetMinSize() const {
-    return max_size_/2;
+    if(IsRootPage()){
+        return 2;
+    }
+    return ceil(max_size_/2);
 }
 
 /*

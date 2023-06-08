@@ -81,20 +81,16 @@ private:
 
     template <typename N>
     bool CoalesceOrRedistribute(N *&node, Transaction *transaction = nullptr);
-
-    bool Coalesce(InternalPage *&neighbor_node, InternalPage *&node, InternalPage *&parent, int index,
+    template <typename N>
+    bool Coalesce(N *&neighbor_node, N *&node, InternalPage *&parent, int index,
                   Transaction *transaction = nullptr);
-
-    bool Coalesce(LeafPage *&neighbor_node, LeafPage *&node, InternalPage *&parent, int index,
-                  Transaction *transaction = nullptr);
-
     void Redistribute(LeafPage *neighbor_node, LeafPage *node, int index);
 
     void Redistribute(InternalPage *neighbor_node, InternalPage *node, int index);
 
     bool AdjustRoot(BPlusTreePage *node);
 
-    void UpdateRootPageId(int insert_record = 0);
+    void UpdateRootPageId(int insert_record = 0) const;
 
     /* Debug Routines for FREE!! */
     void ToGraph(BPlusTreePage *page, BufferPoolManager *bpm, std::ofstream &out) const;
