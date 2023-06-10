@@ -27,7 +27,7 @@ class BPlusTree {
 
 public:
     explicit BPlusTree(index_id_t index_id, BufferPoolManager *buffer_pool_manager, const KeyManager &comparator,
-                       int leaf_max_size = 0, int internal_max_size = 0);
+                       int leaf_max_size = UNDEFINED_SIZE, int internal_max_size = UNDEFINED_SIZE);
 
     // Returns true if this B+ tree has no keys and values.
     bool IsEmpty() const;
@@ -81,22 +81,26 @@ private:
 
     template <typename N>
     bool CoalesceOrRedistribute(N *&node, Transaction *transaction = nullptr);
-    template <typename N>
-    bool Coalesce(N *&neighbor_node, N *&node, InternalPage *&parent, int index,
+
+    bool Coalesce(InternalPage *&neighbor_node, InternalPage *&node, InternalPage *&parent, int index,
                   Transaction *transaction = nullptr);
+
+    bool Coalesce(LeafPage *&neighbor_node, LeafPage *&node, InternalPage *&parent, int index,
+                  Transaction *transaction = nullptr);
+
     void Redistribute(LeafPage *neighbor_node, LeafPage *node, int index);
 
     void Redistribute(InternalPage *neighbor_node, InternalPage *node, int index);
 
     bool AdjustRoot(BPlusTreePage *node);
 
-    void UpdateRootPageId(int insert_record = 0) const;
+    void UpdateRootPageId(int insert_record = 0);
 
     /* Debug Routines for FREE!! */
     void ToGraph(BPlusTreePage *page, BufferPoolManager *bpm, std::ofstream &out) const;
 
     void ToString(BPlusTreePage *page, BufferPoolManager *bpm) const;
-public:
+
     // member variable
     index_id_t index_id_;
     page_id_t root_page_id_{INVALID_PAGE_ID};

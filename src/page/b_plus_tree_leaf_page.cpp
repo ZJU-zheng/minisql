@@ -117,6 +117,12 @@ int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) 
     int i;
     int size = GetSize();
     int old_value_index = KeyIndex(key,KM);
+    if(old_value_index >= GetSize()){
+        SetKeyAt(old_value_index, key);
+        SetValueAt(old_value_index, value);
+        SetSize(size + 1);
+        return GetSize();
+    }
     if(KeyAt(old_value_index) == key){
         return -1;//represent already have this key
     }
@@ -173,6 +179,9 @@ bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM)
     if(index == INVALID_PAGE_ID){
         return false;
     }
+    if(index >= GetSize()){
+        return false;
+    }
     int comp_result = KM.CompareKeys(key,KeyAt(index));
     if(comp_result == 0){
         value = ValueAt(index);
@@ -197,6 +206,10 @@ int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM)
     }
     int index = KeyIndex(key,KM);
     if(index == INVALID_PAGE_ID){
+        LOG(WARNING)<<"delete failed"<<std::endl;
+        return size;
+    }
+    if(index >= GetSize()){
         LOG(WARNING)<<"delete failed"<<std::endl;
         return size;
     }
@@ -230,8 +243,7 @@ int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM)
 void LeafPage::MoveAllTo(LeafPage *recipient) {
     int ori_size = recipient->GetSize();
     int size = GetSize();
-    int s_size = recipient->GetSize();
-    recipient->PairCopy(recipient->KeyAt(s_size), KeyAt(0),size);
+    recipient->PairCopy(recipient->KeyAt(ori_size), KeyAt(0),size);
     recipient->SetSize(ori_size + size);
     recipient->SetNextPageId(GetNextPageId());
     SetSize(0);
