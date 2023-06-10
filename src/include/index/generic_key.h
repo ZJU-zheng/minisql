@@ -39,11 +39,9 @@ class KeyManager {
     Row rhs_key(INVALID_ROWID);
     DeserializeToKey(lhs, lhs_key, key_schema_);
     DeserializeToKey(rhs, rhs_key, key_schema_);
-
     for (uint32_t i = 0; i < column_count; i++) {
       Field *lhs_value = lhs_key.GetField(i);
       Field *rhs_value = rhs_key.GetField(i);
-
       if (lhs_value->CompareLessThan(*rhs_value) == CmpBool::kTrue) {
         return -1;
       }

@@ -5,9 +5,9 @@ uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
     ASSERT(schema != nullptr, "Invalid schema before serialize.");
     ASSERT(schema->GetColumnCount() == fields_.size(), "Fields size do not match schema's column size.");
     uint32_t SerializedSize = 0,temp,count=0;
-    size_t field_count = GetFieldCount();
-    memcpy(buf, &field_count, sizeof(size_t));
-    SerializedSize += sizeof(size_t);
+    uint32_t field_count = GetFieldCount();
+    memcpy(buf, &field_count, sizeof(uint32_t));
+    SerializedSize += sizeof(uint32_t);
     if(field_count == 0)
         return SerializedSize;
     //store null bitmap
@@ -32,14 +32,15 @@ uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
 }
 
 uint32_t Row::DeserializeFrom(char *buf, Schema *schema) {
+    fields_.resize(0);
     ASSERT(schema != nullptr, "Invalid schema before serialize.");
     ASSERT(fields_.empty(), "Non empty field in row.");
     uint32_t SerializedSize = 0;
-    size_t num = 0,i;
+    uint32_t num = 0,i;
     Field *temp;
     TypeId type;
-    memcpy(&num, buf, sizeof(size_t));
-    SerializedSize += sizeof(size_t);
+    memcpy(&num, buf, sizeof(uint32_t));
+    SerializedSize += sizeof(uint32_t);
     if(num == 0)
         return SerializedSize;
     uint32_t byte_size = ceil(num*1.0/8);
@@ -77,6 +78,7 @@ uint32_t Row::DeserializeFrom(char *buf, Schema *schema) {
         }
         fields_.push_back(temp);
     }
+    delete []null_bitmaps;
     return SerializedSize;
 }
 
@@ -87,7 +89,7 @@ uint32_t Row::GetSerializedSize(Schema *schema) const {
     auto ite = fields_.begin();
     for(;ite!=fields_.end();ite++)
         num += (*ite)->GetSerializedSize();
-    return sizeof(size_t)+ceil(GetFieldCount()*1.0/8)+num;
+    return sizeof(uint32_t)+ceil(GetFieldCount()*1.0/8)+num;
 }
 
 void Row::GetKeyFromRow(const Schema *schema, const Schema *key_schema, Row &key_row) {

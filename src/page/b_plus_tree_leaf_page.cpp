@@ -52,25 +52,20 @@ int LeafPage::KeyIndex(const GenericKey *key, const KeyManager &KM) {
     int left = 0;
     int right = GetSize()-1;
     int mid,comp_result;
-    int result = -1;
     while(left <= right){
         mid = (left+right)/2;
         comp_result = KM.CompareKeys(key,KeyAt(mid));
         if(comp_result == 0){
-            return mid;
+            right = mid - 1;
         }
         else if(comp_result < 0){
-            result = mid;
             right = mid - 1;
         }
         else{
             left = mid + 1;
         }
     }
-    if(result == -1){
-        return INVALID_PAGE_ID;
-    }
-    return result;
+    return (right+1);
 }
 
 /*
@@ -197,6 +192,9 @@ bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM)
  */
 int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM) {
     int size = GetSize(),i;
+    if(size == 0){
+        return -1;
+    }
     int index = KeyIndex(key,KM);
     if(index == INVALID_PAGE_ID){
         LOG(WARNING)<<"delete failed"<<std::endl;
@@ -230,9 +228,11 @@ int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM)
  */
 //when merging,I ask the back to move all to the front
 void LeafPage::MoveAllTo(LeafPage *recipient) {
+    int ori_size = recipient->GetSize();
     int size = GetSize();
     int s_size = recipient->GetSize();
     recipient->PairCopy(recipient->KeyAt(s_size), KeyAt(0),size);
+    recipient->SetSize(ori_size + size);
     recipient->SetNextPageId(GetNextPageId());
     SetSize(0);
 }

@@ -72,25 +72,20 @@ page_id_t InternalPage::Lookup(const GenericKey *key, const KeyManager &KM) {
     int left = 1;
     int right = GetSize()-1;
     int mid,comp_result;
-    int result = -1;
     while(left <= right){
         mid = (left+right)/2;
         comp_result = KM.CompareKeys(key,KeyAt(mid));
         if(comp_result == 0){//equals
-            return ValueAt(mid);
+            left = mid + 1;
         }
         else if(comp_result < 0){
             right = mid - 1;
         }
         else{
-            result = mid;
             left = mid + 1;
         }
     }
-    if(result == -1){
-        return ValueAt(0);
-    }
-    return ValueAt(result);
+    return ValueAt(left-1);
 }
 
 /*****************************************************************************
@@ -210,6 +205,7 @@ void InternalPage::MoveAllTo(InternalPage *recipient, GenericKey *middle_key, Bu
     int size = GetSize();
     int size_ = recipient->GetSize();
     memcpy(recipient->KeyAt(size_),data_,size*(GetKeySize()+sizeof(page_id_t)));
+    recipient->SetSize(size_ + size);
     int i;
     InternalPage *temp;
     for(i = 0;i < size;i++){

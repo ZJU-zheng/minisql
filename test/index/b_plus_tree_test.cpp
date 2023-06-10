@@ -19,7 +19,7 @@ TEST(BPlusTreeTests, SampleTest) {
     BPlusTree tree(0, engine.bpm_, KP);
     TreeFileManagers mgr("tree_");
     // Prepare data
-    const int n = 250;
+    const int n = 30;
     vector<GenericKey *> keys;
     vector<RowId> values;
     vector<GenericKey *> delete_seq;

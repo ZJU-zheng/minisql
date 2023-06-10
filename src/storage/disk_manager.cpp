@@ -29,6 +29,7 @@ DiskManager::DiskManager(const std::string &db_file) : file_name_(db_file) {
 
 void DiskManager::Close() {
   std::scoped_lock<std::recursive_mutex> lock(db_io_latch_);
+  WritePhysicalPage(META_PAGE_ID, meta_data_);
   if (!closed) {
     db_io_.close();
     closed = true;
