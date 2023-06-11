@@ -111,7 +111,7 @@ bool BufferPoolManager::DeletePage(page_id_t page_id) {
     if(page_table_.find(page_id) == page_table_.end())
         return true;
     auto ite = page_table_.find(page_id);
-    if(pages_[ite->second].pin_count_){
+    if(pages_[ite->second].pin_count_ != 0){
         LOG(WARNING) << "Someone is using the page" << std::endl;
         return false;
     }

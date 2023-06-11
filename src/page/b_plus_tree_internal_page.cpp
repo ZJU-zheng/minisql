@@ -260,15 +260,15 @@ void InternalPage::MoveLastToFrontOf(InternalPage *recipient, GenericKey *middle
                                      BufferPoolManager *buffer_pool_manager) {
     int size = GetSize();
     recipient->SetKeyAt(0,middle_key);
-    recipient->CopyFirstFrom(ValueAt(size-1),buffer_pool_manager);
-    Remove(size-1);
+    recipient->CopyFirstFrom(KeyAt(size-1),ValueAt(size-1),buffer_pool_manager);
+    SetSize(size-1);
 }
 
 /* Append an entry at the beginning.
  * Since it is an internal page, the moved entry(page)'s parent needs to be updated.
  * So I need to 'adopt' it by changing its parent page id, which needs to be persisted with BufferPoolManger
  */
-void InternalPage::CopyFirstFrom(const page_id_t value, BufferPoolManager *buffer_pool_manager) {
+void InternalPage::CopyFirstFrom(GenericKey *key,const page_id_t value, BufferPoolManager *buffer_pool_manager) {
     int i;
     int size = GetSize();
     GenericKey *temp1;
@@ -280,6 +280,7 @@ void InternalPage::CopyFirstFrom(const page_id_t value, BufferPoolManager *buffe
         SetValueAt(i+1,temp2);
     }
     SetValueAt(0,value);
+    SetKeyAt(0,key);
     SetSize(size+1);
     InternalPage *temp;
     temp = reinterpret_cast<InternalPage *>(buffer_pool_manager->FetchPage(value));
