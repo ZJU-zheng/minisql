@@ -25,11 +25,11 @@ class CatalogMeta {
   uint32_t GetSerializedSize() const;
 
   inline table_id_t GetNextTableId() const {
-    return table_meta_pages_.size() == 0 ? 0 : table_meta_pages_.rbegin()->first;
+    return table_meta_pages_.size() == 0 ? 0 : table_meta_pages_.rbegin()->first+1;
   }
 
   inline index_id_t GetNextIndexId() const {
-    return index_meta_pages_.size() == 0 ? 0 : index_meta_pages_.rbegin()->first;
+    return index_meta_pages_.size() == 0 ? 0 : index_meta_pages_.rbegin()->first+1;
   }
 
   static CatalogMeta *NewInstance() { return new CatalogMeta(); }
@@ -110,7 +110,7 @@ class CatalogManager {
   [[maybe_unused]] LockManager *lock_manager_;
   [[maybe_unused]] LogManager *log_manager_;
   CatalogMeta *catalog_meta_;
-  std::atomic<table_id_t> next_table_id_;
+  std::atomic<table_id_t> next_table_id_;//可以分配的下一个table_id
   std::atomic<index_id_t> next_index_id_;
   // map for tables
   std::unordered_map<std::string, table_id_t> table_names_;

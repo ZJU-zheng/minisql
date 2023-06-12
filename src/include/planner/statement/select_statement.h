@@ -33,7 +33,7 @@ class SelectStatement : public AbstractStatement {
         return;
       }
       case kNodeConditions: {
-        where_ = MakePredicate(ast->child_, table_name_, &column_in_condition_);
+        where_ = MakePredicate(ast->child_, table_name_, &column_in_condition_, &has_or);
         break;
       }
       default:

@@ -6,7 +6,7 @@
 #define MINISQL_ABSTRACT_STATEMENT_H
 
 #include <string>
-
+#include <algorithm>
 #include "planner/expressions/abstract_expression.h"
 #include "planner/expressions/column_value_expression.h"
 #include "planner/expressions/comparison_expression.h"

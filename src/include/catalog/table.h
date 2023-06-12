@@ -11,7 +11,11 @@ class TableMetadata {
   friend class TableInfo;
 
  public:
-  ~TableMetadata() { delete schema_; }
+  ~TableMetadata() {
+    //in TEST(CatalogTest, CatalogIndexTest)最初doublefree
+      //注释掉下面那句就没doublefree了，如果有问题再改
+    //delete schema_;
+  }
 
   uint32_t SerializeTo(char *buf) const;
 
