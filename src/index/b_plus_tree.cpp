@@ -577,11 +577,11 @@ bool BPlusTree::AdjustRoot(BPlusTreePage *old_root_node) {
  * index iterator
  * @return : index iterator
  */
-/**
- * TODO: Student Implement
- */
 IndexIterator BPlusTree::Begin() {
-    return IndexIterator();
+    BPlusTreeLeafPage *temp = reinterpret_cast<BPlusTreeLeafPage *>(FindLeafPage(nullptr,true));
+    page_id_t pageId = temp->GetPageId();
+    buffer_pool_manager_->UnpinPage(temp->GetPageId(),false);
+    return IndexIterator(pageId,buffer_pool_manager_,0);
 }
 
 /*
@@ -589,11 +589,12 @@ IndexIterator BPlusTree::Begin() {
  * first, then construct index iterator
  * @return : index iterator
  */
-/**
- * TODO: Student Implement
- */
 IndexIterator BPlusTree::Begin(const GenericKey *key) {
-    return IndexIterator();
+    BPlusTreeLeafPage *temp = reinterpret_cast<BPlusTreeLeafPage *>(FindLeafPage(key,false));
+    page_id_t pageId = temp->GetPageId();
+    int index = temp->KeyIndex(key,processor_);
+    buffer_pool_manager_->UnpinPage(temp->GetPageId(),false);
+    return IndexIterator(pageId,buffer_pool_manager_,index);
 }
 
 /*
@@ -601,11 +602,18 @@ IndexIterator BPlusTree::Begin(const GenericKey *key) {
  * of the key/value pair in the leaf node
  * @return : index iterator
  */
-/**
- * TODO: Student Implement
- */
 IndexIterator BPlusTree::End() {
-    return IndexIterator();
+    BPlusTreeLeafPage *temp = reinterpret_cast<BPlusTreeLeafPage *>(FindLeafPage(nullptr,true));
+    BPlusTreeLeafPage *next;
+    while(temp->GetNextPageId() != INVALID_PAGE_ID){
+        next=reinterpret_cast<BPlusTreeLeafPage *>(buffer_pool_manager_->FetchPage(temp->GetNextPageId()));
+        buffer_pool_manager_->UnpinPage(temp->GetPageId(),false);
+        temp=next;
+    }
+    page_id_t pageId = temp->GetPageId();
+    int index=temp->GetSize();
+    buffer_pool_manager_->UnpinPage(temp->GetPageId(),false);
+    return IndexIterator(pageId,buffer_pool_manager_,index-1);
 }
 
 /*****************************************************************************

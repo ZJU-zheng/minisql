@@ -65,6 +65,9 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
         catalog_meta_ = CatalogMeta::NewInstance();
         next_table_id_ = 0;
         next_index_id_ = 0;
+        Page * catalog_meta_page = buffer_pool_manager->FetchPage(CATALOG_META_PAGE_ID);
+        catalog_meta_->SerializeTo(catalog_meta_page->GetData());
+        buffer_pool_manager->UnpinPage(CATALOG_META_PAGE_ID,true);
     }
     else{
         Page * catalog_meta_page = buffer_pool_manager->FetchPage(CATALOG_META_PAGE_ID);
@@ -123,7 +126,6 @@ dberr_t CatalogManager::CreateTable(const string &table_name, TableSchema *schem
     catalog_meta_->SerializeTo(catalog_mata_page->GetData());
     buffer_pool_manager_->UnpinPage(CATALOG_META_PAGE_ID,true);
     return DB_SUCCESS;
-    //对于表的主属性自动建立B+树索引
 }
 
 
@@ -183,8 +185,14 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
     auto catalog_meta_page = buffer_pool_manager_->FetchPage(CATALOG_META_PAGE_ID);
     catalog_meta_->SerializeTo(catalog_meta_page->GetData());
     buffer_pool_manager_->UnpinPage(CATALOG_META_PAGE_ID,true);
-
-    //index_names_.emplace();
+    if(index_names_.find(table_name) == index_names_.end()){
+        std::unordered_map<std::string, index_id_t> new_map;
+        new_map.emplace(index_name,next_index_id_);
+        index_names_.emplace(table_name,new_map);
+    }
+    else{
+        ((index_names_.find(table_name))->second).emplace(index_name, next_index_id_);
+    }
     indexes_.emplace(next_index_id_,index_info);
     next_index_id_++;
     return DB_SUCCESS;
@@ -223,8 +231,12 @@ dberr_t CatalogManager::DropTable(const string &table_name) {
         return DB_TABLE_NOT_EXIST;
     }
     //delete index is also needed
-    for(auto ite:index_names_[table_name]){
-        DropIndex(table_name,ite.first);
+    if(index_names_.find(table_name) != index_names_.end()){
+        std::unordered_map<std::string, index_id_t> temp;
+        temp = index_names_[table_name];
+        for(auto ite:temp){
+          DropIndex(table_name,ite.first);
+        }
     }
     table_id_t table_id = table_names_[table_name];
     table_names_.erase(table_name);
@@ -288,7 +300,7 @@ dberr_t CatalogManager::LoadIndex(const index_id_t index_id, const page_id_t pag
         return DB_FAILED;
     }
     auto page_to_load = buffer_pool_manager_->FetchPage(page_id);
-    IndexMetadata *index_meta;
+    IndexMetadata *index_meta= nullptr;
     IndexMetadata::DeserializeFrom(page_to_load->GetData(),index_meta);
     buffer_pool_manager_->UnpinPage(page_id,false);
     IndexInfo * index_info = IndexInfo::Create();

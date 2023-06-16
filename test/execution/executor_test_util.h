@@ -43,8 +43,9 @@ class ExecutorTest : public ::testing::Test {
     std::vector<Column *> columns = {new Column("id", TypeId::kTypeInt, 0, false, false),
                                      new Column("name", TypeId::kTypeChar, 64, 1, true, false),
                                      new Column("account", TypeId::kTypeFloat, 2, true, false)};
-    auto schema = std::make_shared<Schema>(columns);
-    catalog_01->CreateTable("table-1", schema.get(), txn_, table_info);
+    //auto schema = std::make_shared<Schema>(columns);
+    auto schema = new Schema(columns,true);
+    catalog_01->CreateTable("table-1", schema, txn_, table_info);
     TableHeap *table_heap = table_info->GetTableHeap();
     for (int i = 0; i < 1000; i++) {
       int32_t len = RandomUtils::RandomInt(0, 64);

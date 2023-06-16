@@ -38,4 +38,8 @@ class IndexScanExecutor : public AbstractExecutor {
 
   /** The sequential scan plan node to be executed */
   const IndexScanPlanNode *plan_;
+  IndexIterator ite;
+  IndexIterator end;
+  std::vector<IndexInfo *> index_infos;
+  TableInfo *table_info;
 };

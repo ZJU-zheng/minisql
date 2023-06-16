@@ -11,7 +11,7 @@
 // SELECT id FROM table-1 WHERE id < 500
 TEST_F(ExecutorTest, SimpleSeqScanTest) {
   // Construct query plan
-  TableInfo *table_info;
+  TableInfo *table_info = nullptr;
   GetExecutorContext()->GetCatalog()->GetTable("table-1", table_info);
   const Schema *schema = table_info->GetSchema();
   auto col_a = MakeColumnValueExpression(*schema, 0, "id");
@@ -23,7 +23,6 @@ TEST_F(ExecutorTest, SimpleSeqScanTest) {
   // Execute
   std::vector<Row> result_set{};
   GetExecutionEngine()->ExecutePlan(plan, &result_set, GetTxn(), GetExecutorContext());
-
   // Verify
   ASSERT_EQ(result_set.size(), 500);
   for (const auto &row : result_set) {
@@ -42,17 +41,14 @@ TEST_F(ExecutorTest, SimpleDeleteTest) {
   auto predicate = MakeComparisonExpression(col_id, const50, "=");
   auto out_schema = MakeOutputSchema({{"id", col_id}});
   auto scan_plan = std::make_shared<SeqScanPlanNode>(out_schema, table_info->GetTableName(), predicate);
-
   // Create the index
   IndexInfo *index_info = nullptr;
   std::vector<std::string> index_keys{"id"};
   auto r3 =
       GetExecutorContext()->GetCatalog()->CreateIndex("table-1", "index-1", index_keys, GetTxn(), index_info, "bptree");
   ASSERT_EQ(DB_SUCCESS, r3);
-
   std::vector<Row> result_set;
   GetExecutionEngine()->ExecutePlan(scan_plan, &result_set, GetTxn(), GetExecutorContext());
-
   // Verify
   ASSERT_EQ(result_set.size(), 1);
   for (const auto &row : result_set) {

@@ -31,8 +31,10 @@ Page *BufferPoolManager::FetchPage(page_id_t page_id) {
   // 2.     If R is dirty, write it back to the disk.
   // 3.     Delete R from the page table and insert P.
   // 4.     Update P's metadata, read in the page content from disk, and then return a pointer to P.
-    if(page_id == INVALID_PAGE_ID)
-        return nullptr;
+    if(page_id == INVALID_PAGE_ID){
+    LOG(WARNING)<<"invalid page id"<<std::endl;
+      return nullptr;
+    }
     frame_id_t frame_id_new;
     if(page_table_.find(page_id) == page_table_.end()){
         if((free_list_.size()==0) && (replacer_->Size()==0))

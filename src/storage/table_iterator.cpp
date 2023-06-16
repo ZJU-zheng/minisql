@@ -4,13 +4,13 @@
 #include "storage/table_heap.h"
 
 
-TableIterator::TableIterator(Row *row,TableHeap *tableheap) {
-    ite_row = row;
+TableIterator::TableIterator(RowId rowId,TableHeap *tableheap) {
+    ite_row = new Row(rowId);
     ite_tableheap = tableheap;
 }
 
 TableIterator::TableIterator(const TableIterator &other) {
-    this->ite_row = other.ite_row;
+    this->ite_row = new Row(*(other.ite_row));
     this->ite_tableheap = other.ite_tableheap;
 }
 
@@ -20,11 +20,17 @@ TableIterator::~TableIterator() {
 }
 
 bool TableIterator::operator==(const TableIterator &itr) const {
+    if(ite_row->GetRowId().GetPageId() == itr.ite_row->GetRowId().GetPageId()){
+        return true;
+    }
     return false;
 }
 
 bool TableIterator::operator!=(const TableIterator &itr) const {
-  return false;
+  if((*this) == itr){
+        return false;
+  }
+  return true;
 }
 
 const Row &TableIterator::operator*() {
@@ -36,13 +42,20 @@ Row *TableIterator::operator->() {
 }
 
 TableIterator &TableIterator::operator=(const TableIterator &itr) noexcept {
-  ASSERT(false, "Not implemented yet.");
+    ite_tableheap = itr.ite_tableheap;
+    (*ite_row) = (*itr.ite_row);
+    return (*this);
 }
 
 // ++iter
 TableIterator &TableIterator::operator++() {
+    if(ite_tableheap == nullptr){
+        LOG(ERROR)<<"unknown mistake"<<std::endl;
+    }
     auto page = reinterpret_cast<TablePage *>(ite_tableheap->buffer_pool_manager_->FetchPage(ite_row->GetRowId().GetPageId()));
     if(page == nullptr){
+        ite_row->SetRowId(RowId(INVALID_PAGE_ID,0));
+        return *this;
         LOG(ERROR)<<"unknown mistake"<<std::endl;
     }
     RowId next_rowid;
@@ -62,13 +75,13 @@ TableIterator &TableIterator::operator++() {
             return *this;
         }
     }
-    ite_row = nullptr;
+    //ite_row = nullptr;
+    ite_row->SetRowId(RowId(INVALID_PAGE_ID,0));
     return *this;
 }
 
 // iter++
 TableIterator TableIterator::operator++(int) {
-    Row *row = new Row(*ite_row);
     ++(*this);
-    return TableIterator(row,ite_tableheap);
+    return TableIterator(*this);
 }

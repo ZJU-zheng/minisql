@@ -9,8 +9,40 @@ InsertExecutor::InsertExecutor(ExecuteContext *exec_ctx, const InsertPlanNode *p
     : AbstractExecutor(exec_ctx), plan_(plan), child_executor_(std::move(child_executor)) {}
 
 void InsertExecutor::Init() {
+  flag=0;
+  child_executor_->Init();
+  string table_name = plan_->GetTableName();
+  exec_ctx_->GetCatalog()->GetTableIndexes(table_name,indexes);
+  exec_ctx_->GetCatalog()->GetTable(table_name,table_info);
 }
 
 bool InsertExecutor::Next([[maybe_unused]] Row *row, RowId *rid) {
-  return false;
+  if(flag==1){
+    return false;
+  }
+  int count = 0;//记录受影响的行数
+  Row row_to_ins;
+  RowId rowid_to_ins;
+  vector<Field> values_;
+  values_.clear();
+  while(child_executor_->Next(&row_to_ins, &rowid_to_ins)){
+    table_info->GetTableHeap()->InsertTuple(row_to_ins, nullptr);
+    for(auto index:indexes){
+      for(int i = 0;i < index->GetIndexKeySchema()->GetColumnCount();i++){
+        for(int j = 0;j < table_info->GetSchema()->GetColumnCount();j++){
+          if(index->GetIndexKeySchema()->GetColumn(i)->GetName() == table_info->GetSchema()->GetColumn(j)->GetName()){
+            values_.push_back(*(row_to_ins.GetField(j)));
+          }
+        }
+      }
+      index->GetIndex()->InsertEntry(Row(values_),rowid_to_ins, nullptr);
+    }
+    count++;
+  }
+  std::vector<Field> values;
+  values.clear();
+  values.emplace_back(Field(kTypeInt,count));
+  (*row) = Row(values);
+  flag = 1;
+  return true;
 }

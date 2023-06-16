@@ -120,15 +120,16 @@ TableIterator TableHeap::Begin(Transaction *txn) {
             buffer_pool_manager_->UnpinPage(cur_page_id,false);
             Row *row = new Row(first_rid);
             GetTuple(row, nullptr);
-            return TableIterator(row,this);
+            return TableIterator(row->GetRowId(),this);
         }
         buffer_pool_manager_->UnpinPage(cur_page_id,false);
         cur_page_id = page->GetNextPageId();
     }
+    LOG(WARNING)<<"1"<<std::endl;
     return End();
 }
 
 
 TableIterator TableHeap::End() {
-    return TableIterator(nullptr,this);
+    return TableIterator(RowId(INVALID_PAGE_ID,0), nullptr);
 }

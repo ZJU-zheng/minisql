@@ -167,6 +167,7 @@ bool TablePage::GetFirstTupleRid(RowId *first_rid) {
   // Find and return the first valid tuple.
   for (uint32_t i = 0; i < GetTupleCount(); i++) {
     if (!IsDeleted(GetTupleSize(i))) {
+      RowId temp = RowId(GetTablePageId(),i);
       first_rid->Set(GetTablePageId(), i);
       return true;
     }
