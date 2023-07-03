@@ -74,7 +74,7 @@ class IndexInfo {
   inline Index *GetIndex() { return index_; }
 
   std::string GetIndexName() { return meta_data_->GetIndexName(); }
-
+  index_id_t GetIndexId() {return meta_data_->index_id_;}
   IndexSchema *GetIndexKeySchema() { return key_schema_; }
 
  private:

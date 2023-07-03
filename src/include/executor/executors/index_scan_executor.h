@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-
+#include <stack>
 #include "executor/execute_context.h"
 #include "executor/executors/abstract_executor.h"
 #include "executor/plans/index_scan_plan.h"
@@ -33,13 +33,14 @@ class IndexScanExecutor : public AbstractExecutor {
 
   /** @return The output schema for the sequential scan */
   const Schema *GetOutputSchema() const override { return plan_->OutputSchema(); }
+  void FindPredicates(AbstractExpressionRef predicate);
 
  private:
 
   /** The sequential scan plan node to be executed */
   const IndexScanPlanNode *plan_;
-  IndexIterator ite;
-  IndexIterator end;
-  std::vector<IndexInfo *> index_infos;
-  TableInfo *table_info;
+  stack<AbstractExpressionRef> expressions;
+  vector<RowId> result;
+  int result_i;
+  TableInfo *info;
 };

@@ -37,8 +37,9 @@ class LRUReplacer : public Replacer {
 
 private:
   // add your own private member variables here
-  size_t num_pages_;
-  list<frame_id_t> lru_list_;
+ std::list<frame_id_t> victims;
+ std::vector<std::list<frame_id_t>::iterator> cache;
+ size_t  num_pages_;
 };
 
 #endif  // MINISQL_LRU_REPLACER_H

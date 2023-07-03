@@ -57,3 +57,32 @@ TEST(DiskManagerTest, FreePageAllocationTest) {
   EXPECT_EQ(DiskManager::BITMAP_SIZE - 3, meta_page->GetExtentUsedPage(1));
   remove(db_name.c_str());
 }
+/*
+TEST(DiskManagerTest, FreePageAllocationTest2) {
+  std::string db_name = "disk_test_two.db";
+  DiskManager *disk_mgr = new DiskManager(db_name);
+  int extent_nums = 5;
+  for (uint32_t i = 0; i < DiskManager::BITMAP_SIZE * extent_nums; i++) {
+    page_id_t page_id = disk_mgr->AllocatePage();
+    DiskFileMetaPage *meta_page = reinterpret_cast<DiskFileMetaPage *>(disk_mgr->GetMetaData());
+    EXPECT_EQ(i, page_id);
+    EXPECT_EQ(i / DiskManager::BITMAP_SIZE + 1, meta_page->GetExtentNums());
+    EXPECT_EQ(i + 1, meta_page->GetAllocatedPages());
+    EXPECT_EQ(i % DiskManager::BITMAP_SIZE + 1, meta_page->GetExtentUsedPage(i / DiskManager::BITMAP_SIZE));
+  }
+  disk_mgr->DeAllocatePage(0);
+
+  for(int i=0;i<100;i++){
+    disk_mgr->DeAllocatePage(DiskManager::BITMAP_SIZE + i);
+  }
+  DiskFileMetaPage *meta_page = reinterpret_cast<DiskFileMetaPage *>(disk_mgr->GetMetaData());
+  EXPECT_EQ(DiskManager::BITMAP_SIZE-1, meta_page->GetExtentUsedPage(0));
+  page_id_t page_id2 = disk_mgr->AllocatePage();
+  EXPECT_EQ(0, page_id2);
+  EXPECT_EQ(DiskManager::BITMAP_SIZE, meta_page->GetExtentUsedPage(0));
+  EXPECT_EQ(extent_nums * DiskManager::BITMAP_SIZE - 100, meta_page->GetAllocatedPages());
+  EXPECT_EQ(DiskManager::BITMAP_SIZE - 100, meta_page->GetExtentUsedPage(1));
+  EXPECT_EQ(5,meta_page->GetExtentNums());
+  remove(db_name.c_str());
+}
+ */

@@ -46,8 +46,8 @@ class InsertExecutor : public AbstractExecutor {
   const InsertPlanNode *plan_;
   std::unique_ptr<AbstractExecutor> child_executor_;
   int flag;
-  std::vector<IndexInfo *> indexes;
   TableInfo *table_info;
+  std::vector<IndexInfo *> indexes;
 };
 
 #endif  // MINISQL_INSERT_EXECUTOR_H
